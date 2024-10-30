@@ -51,7 +51,7 @@ def fit_invariant_mass_with_background(histogram, x_min, x_max, pdg_id, delta_m)
         # voigtian signal and pol1 bkg
         m_r = Particle.from_pdgid(pdg_id).mass*1e-3
         w_r = Particle.from_pdgid(pdg_id).width/2*1e-3
-        m_d = Particle.from_pdgid(411).mass*1e-3
+        m_d = Particle.from_pdgid(411).mass*1e-3, beta, gamma, beta, gamma
         m_v0 = Particle.from_pdgid(310).mass*1e-3
         if delta_m:
             mean = ROOT.RooRealVar("mean", "Mean of Gaussian", m_r - m_d)
@@ -104,6 +104,108 @@ def fit_invariant_mass_with_background(histogram, x_min, x_max, pdg_id, delta_m)
     canvas.SaveAs("uglyplot.pdf")
     return workspace, mass_frame
 
+def simultaneous_fit_signal_background(signalHist, bkgHist, xMin, xMax, pdgId):
+    """
+    Fit invariant mass histogram using ROOFit, Background estimated with simultaneous fit 
+    from another histogram (sidebands, wrong sign, event mixing, rotation).
+    
+    Arguments:
+    - signalHist: ROOT.TH1, invariant mass histogram to be fitted.
+    - bkgHist: ROOT.TH1, BKG invariant mass distribution.
+    - xMin: float, lower fit limit
+    - xMax: float, upper fit limit
+    - pdgId: int, PDG code of resonance to be fitted. Used to determine fitting functions and initialize parameters.
+    
+    Returns:
+    - workspace: ROOT.RooWorkspace, workspace containing the model and fit result.
+    - massFrame: ROOT.RooPlot, frame containing the fit and histogram for plotting.
+    """
+
+    supportedIds = [10433, 435, 411] #[Ds1, Ds2*, D+]
+
+    if pdgId not in supportedIds:
+        raise KeyError(f"pdgId {pdgId} not supported!")
+    
+    mass = ROOT.RooRealVar("mass", "Invariant Mass", xMin, xMax)
+    signalData = ROOT.RooDataHist("data", "Dataset with invariant mass", ROOT.RooArgList(mass), signalHist)
+    bkgData = ROOT.RooDataHist("data", "Dataset with invariant mass", ROOT.RooArgList(mass), bkgHist)
+    if pdgId == 435:
+        # physics constants
+        mR = Particle.from_pdgid(pdgId).mass*1e-3
+        wR = Particle.from_pdgid(pdgId).width/2*1e-3
+        mD = Particle.from_pdgid(411).mass*1e-3
+        mV0 = Particle.from_pdgid(310).mass*1e-3
+        mSig2 = 2.39
+
+        # PDFs
+        # signal Ds2*(2573) --> Voigtian
+        mean = ROOT.RooRealVar("mean", "Mean of Gaussian", mR) #, mR - 0.01, mR + 0.01)
+        sigma = ROOT.RooRealVar("sigma", "Width of Gaussian", 0.01, 0.005, 0.02)
+        width = ROOT.RooRealVar("width", "Width of BW", wR)
+        signalPDF = ROOT.RooVoigtian("signalPDF", "Voigtian PDF", mass, mean, width, sigma)
+        # Sig2 Incomplete Ds1 --> Gaussian
+        meanSig2 = ROOT.RooRealVar("meanSig2", "Mean of Gaussian", mSig2, mSig2 - 0.01, mSig2 + 0.01)
+        sigmaSig2 = ROOT.RooRealVar("sigmaSig2", "Width of Gaussian", 0.01, 1e-12, 0.01)
+        sig2PDF = ROOT.RooGaussian("sig2PDF", "Gaussian Model", mass, meanSig2, sigmaSig2)
+        # backgorund --> Threshold function
+        mTh = ROOT.RooRealVar("mTh", "Threshold mass", (mD + mV0))
+        l = ROOT.RooRealVar("l", "exponent",0.5,  0.001, 1)        
+        alpha = ROOT.RooRealVar("alpha", "Linear Coefficient",0.2,  -10, 0)
+        beta = ROOT.RooRealVar("beta", "Quadratic Coefficient", 0.2, -100, 100)
+        gamma = ROOT.RooRealVar("gamma", "Cubic Coefficient", 0.2, -100, 100)
+        threshold_formula = "(mass - mTh)^l * exp(alpha * (mass - mTh) + beta * (mass - mTh) * (mass - mTh)+ gamma * (mass - mTh)* (mass - mTh)* (mass - mTh))"
+        # thresholdPDF = ROOT.RooGenericPdf("thresholdPDF", "resonance bkg PDF", "sqrt(abs(mass-mTh))*exp(alpha*(mass-mTh))", ROOT.RooArgSet(mass, mTh, alpha))
+
+        thresholdPDF = ROOT.RooGenericPdf("thresholdPDF", "Threshold PDF", threshold_formula, ROOT.RooArgList(mass, mTh, alpha, beta, gamma, l))
+        # bkg_pdf = ROOT.RooPolynomial("bkg_pdf", "Polynomial Background", mass, ROOT.RooArgList(a0, a1))
+        # totalPDF (signal region only)
+        nSig = ROOT.RooRealVar("nSig","Number of signal events",0.01*signalHist.Integral(), 0 ,0.1*signalHist.Integral())
+        
+        nSig2 = ROOT.RooRealVar("nSig2","Number of signal 2 events",0.01*signalHist.Integral(), 0 ,0.1*signalHist.Integral())
+        nBkg = ROOT.RooRealVar("nBkg","Number of background events",0.9*signalHist.Integral(), 0 ,signalHist.Integral())
+        # totPDF = ROOT.RooAddPdf("totPDF", "Total PDF", ROOT.RooArgList(signalPDF, sig2PDF, thresholdPDF), ROOT.RooArgList(nSig, nSig2, nBkg))        
+        totPDF = ROOT.RooAddPdf("totPDF", "Total PDF", ROOT.RooArgList(signalPDF, thresholdPDF), ROOT.RooArgList(nSig,nBkg))        
+
+        sigCat = ROOT.RooCategory("sigCat", "signal Categories")
+        sigCat.defineType("signalRegion")
+        sigCat.defineType("sidebandRegion")
+        combinedData = ROOT.RooDataHist("combinedData", "combined data", ROOT.RooArgList(mass), ROOT.RooFit.Index(sigCat),
+                    ROOT.RooFit.Import("signalRegion", signalData), ROOT.RooFit.Import("sidebandRegion", bkgData))
+        # Create a simultaneous PDF using the category
+        simPDF = ROOT.RooSimultaneous("simPDF", "simultaneous pdf", sigCat)
+        simPDF.addPdf(totPDF, "signalRegion")
+        simPDF.addPdf(thresholdPDF, "sidebandRegion")
+        # Actual Fit
+        fitResult = simPDF.fitTo(combinedData)
+        #Do the plotting
+        #together 
+        massframe3 = mass.frame()
+        massframe3.SetTitle("Combined histogram")
+        combinedData.plotOn(massframe3)
+        simPDF.plotOn(massframe3,ROOT.RooFit.ProjWData(sigCat,combinedData, True))
+        #Separately for the two categories
+        massframe1 = mass.frame()
+        massframe1.SetTitle("Signal Region")
+        combinedData.plotOn(massframe1, ROOT.RooFit.Cut("sigCat==sigCat::signalRegion"))
+        simPDF.plotOn(massframe1, ROOT.RooFit.Slice(sigCat,"signalRegion"), ROOT.RooFit.ProjWData(sigCat,combinedData,True), ROOT.RooFit.Components("totPDF"), ROOT.RooFit.LineColor(ROOT.kRed))
+        simPDF.plotOn(massframe1, ROOT.RooFit.Slice(sigCat,"signalRegion"), ROOT.RooFit.ProjWData(sigCat,combinedData,True), ROOT.RooFit.Components("sigPDF"), ROOT.RooFit.LineColor(ROOT.kGreen))
+        # simPDF.plotOn(massframe1, ROOT.RooFit.Slice(sigCat,"signalRegion"), ROOT.RooFit.ProjWData(sigCat,combinedData,True), ROOT.RooFit.Components("sig2PDF"), ROOT.RooFit.LineColor(ROOT.kGreen))
+        simPDF.plotOn(massframe1, ROOT.RooFit.Slice(sigCat,"signalRegion"), ROOT.RooFit.ProjWData(sigCat,combinedData,True), ROOT.RooFit.Components("thresholdPDF"), ROOT.RooFit.LineStyle(ROOT.kDashed))
+        massframe2 = mass.frame()
+        massframe2.SetTitle("Side Band region")
+        combinedData.plotOn(massframe2, ROOT.RooFit.Cut("sigCat==sigCat::sidebandRegion"))
+        simPDF.plotOn(massframe2, ROOT.RooFit.Slice(sigCat,"sidebandRegion"), ROOT.RooFit.ProjWData(sigCat,combinedData,True), ROOT.RooFit.Components("thresholdPDF"))
+        canvas = ROOT.TCanvas("cQa","QA",1650,900)
+        canvas.Divide(3,1)
+        canvas.cd(1)
+        massframe1.Draw()
+        canvas.cd(2)
+        massframe2.Draw()
+        canvas.cd(3)
+        massframe3.Draw()
+        canvas.SaveAs("symfit_prova.png")
+
+
 def roofit_plot_with_matplotlib(axis, histogram, workspace, x_min, x_max, fit_min, fit_max, plot):
     """
     Plot a TH1 and ROOFit fitted PDFs using matplotlib .
@@ -146,7 +248,7 @@ def roofit_plot_with_matplotlib(axis, histogram, workspace, x_min, x_max, fit_mi
         bin_content[i] = histogram.GetBinContent(Nmin + i)
         bin_error[i] = histogram.GetBinError(Nmin + i)
 
-    totPDF = workspace.pdf("total_pdf")
+    totPDF = workspace.pdf("totalPDF")
     signalPDF = workspace.pdf("signal_pdf")
     bkgPDF = workspace.pdf("bkg_pdf")
     y_totPDF = np.zeros(N_fit)

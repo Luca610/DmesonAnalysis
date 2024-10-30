@@ -1,0 +1,44 @@
+channel: Dplus # options [Ds, Dplus, LctopKpi, LctopK0s, LctopiL]
+
+infile:
+    isMC: true
+    filename: [/data/shared/DsReso_run3/mc/AO2D_HF_LHC22b1a_2P3PDstar.root ]
+    dirname: DF_2847588306001 # look for every DF
+    treename: O2hfcanddplite
+
+outfile:
+    dirpath: '/data/shared/DsReso_run3/mc/'
+    suffix: _Dpluspp13TeV_run3_LHC22b1a
+    treename: O2hfcanddplite
+    
+skimming:
+    pt:
+        min: [1, 5]
+        max: [5, 50]
+    preselections:   [abs(fNSigTpcPi0) < 3 and abs(fNSigTpcKa1) < 3 and abs(fNSigTpcPi2) < 3 and
+                    fCpa >0.85 and fCpaXY >0.85 and fDecayLength > 0.01 and fDecayLength < 1 and
+                    abs(fImpactParameter0) < 0.5 and abs(fImpactParameter1) < 0.5 and abs(fImpactParameter2) < 0.5 and
+                    abs(fNSigTpcPi1) < 50,
+                    abs(fNSigTpcPi0) < 3 and abs(fNSigTpcKa1) < 3 and abs(fNSigTpcPi2) < 3 and
+                    fCpa > 0.9 and fCpaXY > 0.9 and fDecayLength > 0.02 and fDecayLength < 1 and
+                    abs(fImpactParameter0) < 0.5 and abs(fImpactParameter1) < 0.5 and abs(fImpactParameter2) < 0.5 and
+                    abs(fNSigTpcPi1) < 50 ] # null if you don't want to apply preselections
+    colstokeep: ['fChi2PCA', 'fDecayLength', 'fDecayLengthXY', 'fDecayLengthNormalised',
+       'fDecayLengthXYNormalised', 'fPtProng0', 'fPtProng1', 'fPtProng2',
+       'fImpactParameter0', 'fImpactParameter1', 'fImpactParameter2',
+       'fNSigTpcPi0', 'fNSigTpcKa0',
+       'fNSigTpcPi1', 'fNSigTpcKa1',
+       'fNSigTpcPi2', 'fNSigTpcKa2',
+       'fM', 'fPt', 'fCpa', 'fCpaXY',
+       'fMaxNormalisedDeltaIP', 'fFlagMcMatchRec',
+       'fOriginMcRec'] #empty list if you want to keep everything
+
+missingvalues: # values in dataframe to be replaced with NaN (only possible with python script)
+    enable: 0
+    toreplace:
+        nsigTOF_Pi_0: -999.
+        nsigTOF_K_0: -999.
+        nsigTOF_Pi_1: -999.
+        nsigTOF_K_1: -999.
+        nsigTOF_Pi_2: -999.
+        nsigTOF_K_2: -999.
