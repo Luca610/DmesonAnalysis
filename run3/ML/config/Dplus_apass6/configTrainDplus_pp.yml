@@ -1,0 +1,90 @@
+input: # files to use, set FD to null for binary classification
+    prompt: /home/luca/hd_data/Physics/DsReso_run3/mc/Prompt_Dpluspp13TeV_run3_LHC22b1b_pT_0_24.parquet.gzip
+    FD: /home/luca/hd_data/Physics/DsReso_run3/mc/FD_Dpluspp13TeV_run3_LHC22b1a_pT_0_24.parquet.gzip
+    data: /home/luca/hd_data/Physics/DsReso_run3/data/Data_Dpluspp13TeV_run3_LHC22pass6_pT_0_24.parquet.gzip 
+    treename: null
+
+output:
+    leg_labels: # legend labels, keep the right number of classes
+        Bkg: Background
+        Prompt: Prompt D$^+$
+        FD: Feed-down D$^+$
+    out_labels: # output labels, keep the right number of classes
+        Bkg: Bkg
+        Prompt: Prompt
+        FD: FD
+    dir: '/home/luca/hd_data/Physics/DsReso_run3/outputML/no_opt/nSigmaTOF' # output dir
+
+pt_ranges: # ranges in pt to split the data in the ml training and testing
+    min: [1, 2, 3, 4, 5, 6, 8, 10, 12, 24] # list
+    max: [2, 3, 4, 5, 6, 8, 10, 12, 24, 36] # list
+
+data_prep:
+    filt_bkg_mass: fM < 1.81 or fM > 1.93 # pandas query to select bkg candidates
+    dataset_opt: equal  # change how the dataset is built, options available: 'equal', 'max_signal'
+                        # 'equal' -> same number of prompt/FD/bkg (not using all the signal available)
+                        # 'max_signal' -> try to use all the signal (prompt and FD) + add n_bkg = 2 * (n_prompt + n_FD)
+    bkg_mult: [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.] # list of multipliers for (nPrompt + nFD) used to determine nCandBkg in the 'max_signal' option
+    seed_split: 69 # seed used for train_test_split(...)
+    test_fraction: 0.2 # fraction of data used for test set and efficiencies     
+
+ml:
+    raw_output: False # use raw_output (True) of probability (False) as output of the model
+    roc_auc_average: 'macro' # 'macro' or 'weighted'
+    roc_auc_approach: 'ovo'  # 'ovo' or 'ovr'
+    training_columns: ['fDecayLength', 'fDecayLengthXY', 
+                       'fNSigTpcPi0', 'fNSigTpcKa0', 'fNSigTpcPi1', 'fNSigTpcKa1', 'fNSigTpcPi2', 'fNSigTpcKa2',
+                       'fNSigTofPi0', 'fNSigTofKa0', 'fNSigTofPi1', 'fNSigTofKa1', 'fNSigTofPi2', 'fNSigTofKa2',
+                       'fChi2PCA', 'fCpa', 'fCpaXY', 'fMaxNormalisedDeltaIP'
+                       ]
+                       # list of training variables
+
+    hyper_par: [{'max_depth':3, 'learning_rate':0.0238, 'n_estimators':1028, 'min_child_weight':5, 'colsample':0.9, 'n_jobs':24, 'tree_method':hist},
+                {'max_depth':4, 'learning_rate':0.0210, 'n_estimators':1282, 'min_child_weight':5, 'colsample':0.9, 'n_jobs':24, 'tree_method':hist},
+                {'max_depth':4, 'learning_rate':0.0210, 'n_estimators':1282, 'min_child_weight':5, 'colsample':0.9, 'n_jobs':24, 'tree_method':hist},
+                {'max_depth':4, 'learning_rate':0.0210, 'n_estimators':1282, 'min_child_weight':5, 'colsample':0.9, 'n_jobs':24, 'tree_method':hist},
+                {'max_depth':4, 'learning_rate':0.0210, 'n_estimators':1282, 'min_child_weight':5, 'colsample':0.9, 'n_jobs':24, 'tree_method':hist},
+                {'max_depth':4, 'learning_rate':0.0210, 'n_estimators':1282, 'min_child_weight':5, 'colsample':0.9, 'n_jobs':24, 'tree_method':hist},
+                {'max_depth':3, 'learning_rate':0.0283, 'n_estimators':1067, 'min_child_weight':5, 'colsample':0.9, 'n_jobs':24, 'tree_method':hist},
+                {'max_depth':3, 'learning_rate':0.0283, 'n_estimators':1067, 'min_child_weight':5, 'colsample':0.9, 'n_jobs':24, 'tree_method':hist},
+                {'max_depth':3, 'learning_rate':0.0261, 'n_estimators':1041, 'min_child_weight':5, 'colsample':0.9, 'n_jobs':24, 'tree_method':hist},
+                {'max_depth':2, 'learning_rate':0.0261, 'n_estimators':500, 'min_child_weight':5, 'colsample':0.9, 'n_jobs':24, 'tree_method':hist}]
+                # list of dicts of hyperparameters (one for each pT bin)
+
+    hyper_par_opt:
+      do_hyp_opt: False # whether to do the parameter optimization
+      ntrials : 10
+      direction : "maximize"
+      bayes_opt_config: {'max_depth': !!python/tuple [2, 6], 
+                        'learning_rate': !!python/tuple [0.02, 0.1]}
+                        # configuration dictionary for optimize_params_bayes()
+    
+    saved_models: [/home/luca/hd_data/Physics/DsReso_run3/inputML/pt1_2/ModelHandler_pT_1_2.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/inputML/pt2_3/ModelHandler_pT_2_3.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/inputML/pt3_4/ModelHandler_pT_3_4.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/inputML/pt4_5/ModelHandler_pT_4_5.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/inputML/pt5_6/ModelHandler_pT_5_6.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/inputML/pt6_8/ModelHandler_pT_6_8.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/inputML/pt8_10/ModelHandler_pT_8_10.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/inputML/pt10_12/ModelHandler_pT_10_12.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/inputML/pt12_24/ModelHandler_pT_12_24.pickle,
+                   /home/luca/hd_data/Physics/DsReso_run3/inputML/pt24_36/ModelHandler_pT_24_36.pickle] # list of saved ModelHandler (path+file), compatible with the pt bins # list of saved ModelHandler (path+file), compatible with the pt bins
+
+plots:
+    plotting_columns: ['fM', 'fPt',     
+                       'fDecayLength', 'fDecayLengthXY', 
+                       'fNSigTpcPi0', 'fNSigTpcKa0', 'fNSigTpcPi1', 'fNSigTpcKa1', 'fNSigTpcPi2', 'fNSigTpcKa2',
+                       'fNSigTofPi0', 'fNSigTofKa0', 'fNSigTofPi1', 'fNSigTofKa1', 'fNSigTofPi2', 'fNSigTofKa2',
+                       'fChi2PCA', 'fCpa', 'fCpaXY', 'fMaxNormalisedDeltaIP'
+                       ] 
+                       # list of variables to plot
+    train_test_log: true # use log scale for plots of train and test distributions
+  
+appl: 
+    column_to_save_list: ['fM', 'fPt'] # list of variables saved in the dataframes with the applied models
+
+standalone_appl:
+    treename: null # null if using parquet
+    inputs: [] # list of parquet files for the model application
+    output_names: [] # names for the outputs (one for each file)
+    output_dir: null # output directory

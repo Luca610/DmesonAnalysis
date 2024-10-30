@@ -1,0 +1,37 @@
+channel: Dstar # options [D0, Ds, Dplus, Dstar]
+
+infile:
+    isMC: false
+    filename: [/home/luca/HF_data/TrainingBDTapass7/AO2D_DstarTree_LHC22o_apass7_medium.root ]
+    dirname:   # look for every DF
+    treename: O2hfcanddstlite
+
+outfile:
+    dirpath: /home/luca/HF_data/TrainingBDTapass7/filtered/
+    suffix: _Dstar_pprun3_LHC22pass7
+    treename: O2hfcanddstlite
+    
+skimming:
+    pt:
+        min: [0]
+        max: [100]
+    preselections:   ["fNSigTpcTofPi0 < 7500 & fNSigTpcTofPi1 < 7500 & fNSigTpcTofKa0 < 7500 & fNSigTpcTofKa1 < 7500"] # null if you don't want to apply preselections
+
+    colstokeep: [ "fChi2PCAD0", "fDecayLengthD0", "fDecayLengthXYD0", "fDecayLengthNormalisedD0",
+    "fDecayLengthXYNormalisedD0", "fCpaD0", "fCpaXYD0", "fMaxNormalisedDeltaIPD0",
+    "fImpactParameterProductD0", "fCosThetaStarD0", "fPtProng0", "fPtProng1", "fPtSoftPi",
+    "fImpactParameter0", "fImpactParameter1", "fImpParamSoftPi", "fImpactParameterNormalised0",
+    "fImpactParameterNormalised1", "fImpactParameterNormalisedSoftPi", 
+    "fNSigTpcPi0", "fNSigTpcKa0", "fNSigTofPi0", "fNSigTofKa0", "fNSigTpcTofPi0", "fNSigTpcTofKa0", 
+    "fNSigTpcPi1", "fNSigTpcKa1","fNSigTofPi1", "fNSigTofKa1", "fNSigTpcTofPi1", "fNSigTpcTofKa1",
+    "fNSigTpcPiSoftPi", "fNSigTpcKaSoftPi","fNSigTofPiSoftPi", "fNSigTofKaSoftPi", "fNSigTpcTofPiSoftPi", "fNSigTpcTofKaSoftPi", 
+    "fMD0", "fPtD0", "fEtaD0", "fPhiD0", "fYD0", "fM", "fPt", "fEta", "fPhi", "fY", fDeltaM] 
+missingvalues: # values in dataframe to be replaced with NaN (only possible with python script)
+    enable: 0
+    toreplace:
+        nsigTOF_Pi_0: -999.
+        nsigTOF_K_0: -999.
+        nsigTOF_Pi_1: -999.
+        nsigTOF_K_1: -999.
+        nsigTOF_Pi_2: -999.
+        nsigTOF_K_2: -999.

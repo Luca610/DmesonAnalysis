@@ -1,0 +1,39 @@
+channel: Dplus # options [Ds, Dplus, LctopKpi, LctopK0s, LctopiL]
+
+infile:
+    isMC: true
+    filename: [/home/luca/HF_data/AO2D_Tree_LHC24d3a.root, /home/luca/HF_data/AO2D_Tree_LHC24d3b.root]
+    dirname:   # look for every DF
+    treename: O2hfcanddplite
+
+outfile:
+    dirpath: '../ML/data/'
+    suffix: _Dpluspp13TeV_run3_LHC24d3_both
+    treename: O2hfcanddplite
+    
+skimming:
+    pt:
+        min: [0]
+        max: [100]
+    preselections: [null] # null if you don't want to apply preselections
+
+    colstokeep: [
+                'fDecayLength', 'fDecayLengthXY', 'fCpa', 'fCpaXY', 
+                'fImpactParameter0', 'fImpactParameter1', 'fImpactParameter2',
+                'fImpactParameterZ0', 'fImpactParameterZ1', 'fImpactParameterZ2',
+                'fDecayLengthNormalised', 'fDecayLengthXYNormalised', 'fChi2PCA', 'fMaxNormalisedDeltaIP',
+                'fNSigTpcPi0', 'fNSigTpcKa0', 'fNSigTpcPi1', 'fNSigTpcKa1', 'fNSigTpcPi2', 'fNSigTpcKa2',
+                'fNSigTofPi0', 'fNSigTofKa0', 'fNSigTofPi1', 'fNSigTofKa1', 'fNSigTofPi2', 'fNSigTofKa2',
+                'fNSigTpcTofPi0', 'fNSigTpcTofKa0', 'fNSigTpcTofPi1', 'fNSigTpcTofKa1', 'fNSigTpcTofPi2', 'fNSigTpcTofKa2',
+                'fM', 'fPt' 
+                ] #empty list if you want to keep everything
+
+missingvalues: # values in dataframe to be replaced with NaN (only possible with python script)
+    enable: 0
+    toreplace:
+        nsigTOF_Pi_0: -999.
+        nsigTOF_K_0: -999.
+        nsigTOF_Pi_1: -999.
+        nsigTOF_K_1: -999.
+        nsigTOF_Pi_2: -999.
+        nsigTOF_K_2: -999.

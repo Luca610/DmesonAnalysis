@@ -1,0 +1,26 @@
+#config for significance optimization on data
+#projection
+inputfile: /home/luca/HF_data/Reso_MC_Data/TrainingBDTapass7/AnalysisResults_DPlusMl_pass4.root
+dirname: hf-task-dplus
+sparsename: hSparseMass
+projfile: /home/luca/hd_data/Physics/DsReso_run3/cutopt/Dplus_pass7_all/AnalysisResults_DPlusMl_pass4.root
+outputfolder: /home/luca/hd_data/Physics/DsReso_run3/cutopt/Dplus_pass7_all/plots
+pdgId: 411
+cutvars: 
+  pt:
+    min:  [ 0.0, 1.0, 2.0, 3.0, 5.0, 7.0, 10., 15., 20.] 
+    max:  [ 1.0, 2.0, 3.0, 5.0, 7.0, 10., 15., 20., 50.]
+    axisnum: 1  
+  bkgBDT:
+    min:  [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  
+    max:  [ 0.1, 0.1, 0.1, 0.1, 0.5, 0.5, 0.5, 0.5, 0.5]
+    axisnum: 2
+  massFitRange:
+    min : [1.79, 1.79, 1.79, 1.75, 1.75, 1.75, 1.75, 1.70, 1.70]
+    max : [1.95, 1.95, 1.95, 1.99, 1.99, 1.99, 1.99, 2.05, 2.05]
+rebin:
+  [ 2, 1, 1, 1, 1, 2, 2, 4, 4]
+mass:
+  min : 1.70
+  max : 2.05 
+nsteps: 20

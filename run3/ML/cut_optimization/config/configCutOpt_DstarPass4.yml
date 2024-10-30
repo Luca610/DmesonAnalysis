@@ -1,0 +1,26 @@
+#config for significance optimization on data
+#projection
+inputfile: /home/luca/HF_data/Reso_MC_Data/TrainingBDTapass7/AnalysisResults_DStarMl_pass4.root
+dirname: task-polarisation-charm-hadrons
+sparsename: hHelicity
+projfile: /home/luca/hd_data/Physics/DsReso_run3/cutopt/Dstar_pass7_all/AnalysisResults_DStarMl_pass4.root
+outputfolder: /home/luca/hd_data/Physics/DsReso_run3/cutopt/Dstar_pass7_all/plots
+pdgId: 413
+cutvars: 
+  pt:
+    min:  [ 1.0, 2.0, 3.0, 5.0, 7.0, 10., 15., 20.] 
+    max:  [ 2.0, 3.0, 5.0, 7.0, 10., 15., 20., 50.]
+    axisnum: 1  
+  bkgBDT:
+    min:  [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  
+    max:  [ 0.2, 0.5, 1, 1, 1, 1, 1, 1]
+    axisnum: 6
+  massFitRange:
+    min : [0.141, 0.141, 0.141, 0.141, 0.141, 0.141, 0.141, 0.141]
+    max : [0.152, 0.152, 0.152, 0.152, 0.152, 0.152, 0.152, 0.152]
+rebin:
+  [ 1, 1, 1, 1, 1, 1, 1, 1]
+mass:
+  min : 0.14
+  max : 0.155 
+nsteps: 20

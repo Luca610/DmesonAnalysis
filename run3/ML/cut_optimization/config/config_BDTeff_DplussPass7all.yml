@@ -1,0 +1,37 @@
+#config for significance optimization on data
+#projection
+outfile: /home/luca/hd_data/Physics/DsReso_run3/cutopt/Dplus_pass7_all/plotsPass7
+cutvars:
+  pt:
+    min:  [ 0.0, 1.0, 2.0, 3.0, 5.0, 7.0, 10., 15., 20.] 
+    max:  [ 1.0, 2.0, 3.0, 5.0, 7.0, 10., 15., 20., 50.]
+    axisnum: 1  
+  bkgBDT:
+    min:  [ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]  
+    max:  [  0.02, 0.02, 0.05, 0.05, 0.2, 0.5, 0.5, 1, 1]
+    axisnum: 2
+  promptBDT:
+    min:  [ 0.0, 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.] 
+    max:  [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    axisnum: 3
+  massFitRange:
+    min : [1.75, 1.75, 1.75, 1.75, 1.75, 1.75, 1.70, 1.70, 1.70]
+    max : [1.99, 1.99, 1.99, 1.99, 1.99, 1.99, 2.05, 2.05, 2.05]
+mass:
+  min : 1.70
+  max : 2.05
+  
+nsteps: 40
+# BDTEFF
+bkgOnly: yes
+modelapplieddirs : [/home/luca/hd_data/Physics/DsReso_run3/outputML/apass7Dplus/all/pt0_1/,
+                    /home/luca/hd_data/Physics/DsReso_run3/outputML/apass7Dplus/all/pt1_2/,
+                    /home/luca/hd_data/Physics/DsReso_run3/outputML/apass7Dplus/all/pt2_3/,
+                    /home/luca/hd_data/Physics/DsReso_run3/outputML/apass7Dplus/all/pt3_5/,
+                    /home/luca/hd_data/Physics/DsReso_run3/outputML/apass7Dplus/all/pt5_7/,
+                    /home/luca/hd_data/Physics/DsReso_run3/outputML/apass7Dplus/all/pt7_10/,
+                    /home/luca/hd_data/Physics/DsReso_run3/outputML/apass7Dplus/all/pt10_15/,
+                    /home/luca/hd_data/Physics/DsReso_run3/outputML/apass7Dplus/all/pt15_20/,
+                    /home/luca/hd_data/Physics/DsReso_run3/outputML/apass7Dplus/all/pt20_50/]
+proposed_cuts :
+  [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]

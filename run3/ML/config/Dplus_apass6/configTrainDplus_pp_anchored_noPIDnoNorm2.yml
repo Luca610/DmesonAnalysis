@@ -1,0 +1,98 @@
+input: # files to use, set FD to null for binary classification
+    prompt: /home/luca/alice/DmesonAnalysis/RUN3/ML/data/Prompt_Dpluspp13TeV_run3_LHC24d3_both_pT_0_100.parquet.gzip
+    FD: /home/luca/alice/DmesonAnalysis/RUN3/ML/data/FD_Dpluspp13TeV_run3_LHC24d3_both_pT_0_100.parquet.gzip
+    data: /home/luca/alice/DmesonAnalysis/RUN3/ML/data/Data_Dpluspp13TeV_run3_LHC22pass6_5sig_pT_0_100.parquet.gzip
+    treename: null
+
+output:
+    leg_labels: # legend labels, keep the right number of classes
+        Bkg: Background
+        Prompt: Prompt D$^+$
+        FD: Feed-down D$^+$
+    out_labels: # output labels, keep the right number of classes
+        Bkg: Bkg
+        Prompt: Prompt
+        FD: FD
+    dir: '/home/luca/hd_data/Physics/DsReso_run3/outputML/hypOpt/anchored_noPIDnoNorm2' # output dir
+
+pt_ranges: # ranges in pt to split the data in the ml training and testing
+    min: [ 0.5, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 12] # list
+    max: [ 1.5, 2, 2.5, 3.0, 4, 5, 6, 8, 12,100] # list
+
+data_prep:
+    filt_bkg_mass: fM < 1.8 or fM > 1.95 # pandas query to select bkg candidates
+    dataset_opt: equal  # change how the dataset is built, options available: 'equal', 'max_signal'
+                        # 'equal' -> same number of prompt/FD/bkg (not using all the signal available)
+                        # 'max_signal' -> try to use all the signal (prompt and FD) + add n_bkg = 2 * (n_prompt + n_FD)
+    bkg_mult: [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.] # list of multipliers for (nPrompt + nFD) used to determine nCandBkg in the 'max_signal' option
+    seed_split: 42 # seed used for train_test_split(...)
+    test_fraction: 0.3 # fraction of data used for test set and efficiencies     
+
+ml:
+    raw_output: False # use raw_output (True) of probability (False) as output of the model
+    roc_auc_average: 'macro' # 'macro' or 'weighted'
+    roc_auc_approach: 'ovo'  # 'ovo' or 'ovr'
+    training_columns: ['fDecayLength', 'fDecayLengthXY', 'fCpa', 'fCpaXY', 
+                        'fImpactParameter0', 'fImpactParameter1', 'fImpactParameter2',
+                         'fImpactParameterZ0', 'fImpactParameterZ1', 'fImpactParameterZ2'] 
+                       # list of training variables
+
+    hyper_par: [{'max_depth':3, 'learning_rate':0.0238, 'n_estimators':1028, 'min_child_weight':5, 'n_jobs':8, 'tree_method':hist},
+                {'max_depth':4, 'learning_rate':0.0210, 'n_estimators':1282, 'min_child_weight':5, 'n_jobs':8, 'tree_method':hist},
+                {'max_depth':4, 'learning_rate':0.0210, 'n_estimators':1282, 'min_child_weight':5, 'n_jobs':8, 'tree_method':hist},
+                {'max_depth':4, 'learning_rate':0.0210, 'n_estimators':1282, 'min_child_weight':5, 'n_jobs':8, 'tree_method':hist},
+                {'max_depth':4, 'learning_rate':0.0210, 'n_estimators':1282, 'min_child_weight':5, 'n_jobs':8, 'tree_method':hist},
+                {'max_depth':4, 'learning_rate':0.0210, 'n_estimators':1282, 'min_child_weight':5, 'n_jobs':8, 'tree_method':hist},
+                {'max_depth':3, 'learning_rate':0.0283, 'n_estimators':1067, 'min_child_weight':5, 'n_jobs':8, 'tree_method':hist},
+                {'max_depth':3, 'learning_rate':0.0283, 'n_estimators':1067, 'min_child_weight':5, 'n_jobs':8, 'tree_method':hist},
+                {'max_depth':2, 'learning_rate':0.0261, 'n_estimators':500, 'min_child_weight':5, 'n_jobs':8, 'tree_method':hist},
+                {'max_depth':2, 'learning_rate':0.0261, 'n_estimators':500, 'min_child_weight':5, 'n_jobs':8, 'tree_method':hist}]
+                # list of dicts of hyperparameters (one for each pT bin)
+
+    hyper_par_opt:
+      do_hyp_opt: true # whether to do the parameter optimization
+      njobs: 5 # number of parallel jobs used in hyper-parameter optimization, -1. to use all
+      nfolds: 5 # number of folds used in cross validation
+      initpoints: 10 # steps of random exploration you want to perform
+      ntrials: 15 # steps for bayesian optimization
+      timeout: null
+      direction : "maximize"
+      bayes_opt_config: {'max_depth': !!python/tuple [2, 3], 
+                        'learning_rate': !!python/tuple [0.01, 0.05],
+                        'n_estimators': !!python/tuple [500, 1300],
+                        'min_child_weight': !!python/tuple [1, 10],
+                        'subsample': !!python/tuple [0.8, 1.], 
+                        'colsample_bytree': !!python/tuple [0.8, 1.],
+                        'lambda': !!python/tuple [0., 0.001]}
+                        # configuration dictionary for optimize_params_bayes()
+    
+    saved_models: [/home/luca/hd_data/Physics/DsReso_run3/outputML/hypOpt/anchored_noPIDnoNorm2/pt0.5_1.5/ModelHandler_pT_0.5_1.5.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/outputML/hypOpt/anchored_noPIDnoNorm2/pt1.5_2/ModelHandler_pT_1.5_2.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/outputML/hypOpt/anchored_noPIDnoNorm2/pt2_2.5/ModelHandler_pT_2_2.5.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/outputML/hypOpt/anchored_noPIDnoNorm2/pt2.5_3.0/ModelHandler_pT_2.5_3.0.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/outputML/hypOpt/anchored_noPIDnoNorm2/pt3_4/ModelHandler_pT_3_4.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/outputML/hypOpt/anchored_noPIDnoNorm2/pt4_5/ModelHandler_pT_4_5.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/outputML/hypOpt/anchored_noPIDnoNorm2/pt5_6/ModelHandler_pT_5_6.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/outputML/hypOpt/anchored_noPIDnoNorm2/pt6_8/ModelHandler_pT_6_8.pickle, 
+                   /home/luca/hd_data/Physics/DsReso_run3/outputML/hypOpt/anchored_noPIDnoNorm2/pt8_12/ModelHandler_pT_8_12.pickle,
+                   /home/luca/hd_data/Physics/DsReso_run3/outputML/hypOpt/anchored_noPIDnoNorm2/pt12_100/ModelHandler_pT_12_100.pickle] # list of saved ModelHandler (path+file), compatible with the pt bins # list of saved ModelHandler (path+file), compatible with the pt bins
+
+plots:
+    plotting_columns: ['fM', 'fPt',
+                        'fDecayLength', 'fDecayLengthXY', 'fCpa', 'fCpaXY', 
+                        'fImpactParameter0', 'fImpactParameter1', 'fImpactParameter2',
+                         'fImpactParameterZ0', 'fImpactParameterZ1', 'fImpactParameterZ2'] 
+                       # list of variables to plot
+    train_test_log: True # use log scale for plots of train and test distributions
+  
+appl: 
+    column_to_save_list: ['fM', 'fPt'] # list of variables saved in the dataframes with the applied models
+
+standalone_appl:
+    treename: null # null if using parquet
+    inputs: [] # list of parquet files for the model application
+    output_names: [] # names for the outputs (one for each file)
+    output_dir: null # output directory
+
+conversion:
+    output_folder : '/home/luca/hd_data/Physics/DsReso_run3/outputML/hypOpt/anchored_noPIDnoNorm2/converted/'

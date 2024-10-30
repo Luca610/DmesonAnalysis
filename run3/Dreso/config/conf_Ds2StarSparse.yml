@@ -1,0 +1,19 @@
+# Sparse projection
+proj:
+    filename: /home/luca/alice/Ds_reso/AnalysisResults_Ds2StarTrigger.root
+    dirname:   hf-task-reso
+    histname: hSparseMl
+    ptAxis: 0
+    ptLims: [ 5., 6., 8., 12, 24.]
+    massAxis: 3
+    masslims: [2.35, 2.73]
+
+fit:
+    filename: 
+    histname:
+    pdgId: 435 # options [10433 = Ds1, 435 = Ds2Star, 666=XcStar]
+    fitLims: [2.37, 2.73]
+    plotLims: [2.37, 2.73]
+
+    # fitLims: [2.45, 2.73]
+    deltaMass: false
