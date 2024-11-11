@@ -6,7 +6,7 @@ run: python MLClassification.py cfgFileNameML.yml [--train, --apply]
 '''
 import os
 import sys
-sys.path.append('/home/luca/alice/DmesonAnalysis/utils')
+sys.path.append('/home/lagliett/alice/DmesonAnalysis/utils')
 import argparse
 import pickle
 import yaml
@@ -272,16 +272,16 @@ def train_test(inputCfg, PtBin, OutPutDirPt, TrainTestData, iBin): #pylint: disa
     PrecisionRecallFig = plot_utils.plot_precision_recall(TrainTestData[3], yPredTest, LegLabels)
     PrecisionRecallFig.savefig(f'{OutPutDirPt}/PrecisionRecallAll_pT_{PtBin[0]}_{PtBin[1]}.pdf')
     #_____________________________________________
-    plt.rcParams["figure.figsize"] = (12, 7)
-    FeaturesImportanceFig = plot_utils.plot_feature_imp(TrainTestData[2][TrainCols], TrainTestData[3], ModelHandl,
-                                                        LegLabels)
-    n_plot = n_classes if n_classes > 2 else 1
-    for iFig, Fig in enumerate(FeaturesImportanceFig):
-        if iFig < n_plot:
-            label = OutputLabels[iFig] if n_classes > 2 else ''
-            Fig.savefig(f'{OutPutDirPt}/FeatureImportance{label}_pT_{PtBin[0]}_{PtBin[1]}.pdf')
-        else:
-            Fig.savefig(f'{OutPutDirPt}/FeatureImportanceAll_pT_{PtBin[0]}_{PtBin[1]}.pdf')
+    # plt.rcParams["figure.figsize"] = (12, 7)
+    # FeaturesImportanceFig = plot_utils.plot_feature_imp(TrainTestData[2][TrainCols], TrainTestData[3], ModelHandl,
+    #                                                     LegLabels)
+    # n_plot = n_classes if n_classes > 2 else 1
+    # for iFig, Fig in enumerate(FeaturesImportanceFig):
+    #     if iFig < n_plot:
+    #         label = OutputLabels[iFig] if n_classes > 2 else ''
+    #         Fig.savefig(f'{OutPutDirPt}/FeatureImportance{label}_pT_{PtBin[0]}_{PtBin[1]}.pdf')
+    #     else:
+    #         Fig.savefig(f'{OutPutDirPt}/FeatureImportanceAll_pT_{PtBin[0]}_{PtBin[1]}.pdf')
 
     return ModelHandl
 
